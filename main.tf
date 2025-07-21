@@ -1,10 +1,38 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "=3.0.0"
+    }
+    docker = {
+      source  = "kreuzwerker/docker"
+      version = "3.6.2"
+    }
+  }
+}
+
 provider "azurerm" {
   features {
     
   }
-
-  subscription_id = var.subcriptionID
+  tenant_id = var.tenantID
+  # subscription_id = var.subcriptionID
 }
+
+provider "docker" {
+  host = "unix:///var/run/docker.sock" 
+}
+
+
+
+resource "docker_image" "codeS" {
+  name = "codexdev"
+  build {
+    context = "${path.module}"
+    dockerfile = "Dockerfile"
+  }
+}
+
 
 resource "azurerm_resource_group" "RG" {
   name = "RG_vscode"
@@ -21,7 +49,8 @@ resource "azurerm_container_group" "container" {
   
   container {
     name = "code-server"
-    image = "mcr.microsoft.com/vscode/devcontainers/python:3"
+    # image = "mcr.microsoft.com/vscode/devcontainers/python:3"
+    image = docker_image.codeS.image_id
     memory = "1.5"
     cpu = "1"
 
